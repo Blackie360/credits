@@ -121,7 +121,7 @@ export default function Home () {
         </div>
 
         <p className="text-center text-xs text-zinc-500">
-          Cursor Pro Redeem Codes
+          Cursor Pro Redeem Codes pwani
         </p>
       </main>
     </div>

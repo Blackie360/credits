@@ -33,7 +33,10 @@ export default function Home () {
             height={56}
             className="mx-auto"
           />
-          <h1 className="text-center text-2xl font-bold tracking-tight">
+          <h1
+            className="text-center text-2xl font-bold tracking-tight"
+            style={{ fontFamily: 'var(--font-geist-pixel-square)' }}
+          >
             Cursor Pro Redeem Codes
           </h1>
           <p className="text-center text-sm font-normal text-zinc-400">

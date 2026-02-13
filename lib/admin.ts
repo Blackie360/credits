@@ -55,7 +55,25 @@ export async function verifyAdminToken (token: string | undefined): Promise<bool
   const [username, userToken] = token.split(':')
   if (!username || !userToken || userToken.length !== TOKEN_LENGTH) return false
 
-  const [user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username)).limit(1)
+  const envAdminUsername = process.env.ADMIN_USERNAME?.trim()
+  const envAdminPasswordHash = process.env.ADMIN_PASSWORD_HASH?.trim()
+  const envAdminPassword = process.env.ADMIN_PASSWORD
+  const envAdminSecret = envAdminPasswordHash ?? envAdminPassword
+  if (envAdminUsername && envAdminSecret && safeEqual(username, envAdminUsername)) {
+    const expected = getToken(username, envAdminSecret)
+    try {
+      return timingSafeEqual(Buffer.from(userToken, 'hex'), Buffer.from(expected, 'hex'))
+    } catch {
+      return false
+    }
+  }
+
+  let user: { username: string, passwordHash: string } | undefined
+  try {
+    ;[user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username)).limit(1)
+  } catch {
+    return false
+  }
   if (!user) return false
 
   const expected = getToken(username, user.passwordHash)
@@ -67,7 +85,25 @@ export async function verifyAdminToken (token: string | undefined): Promise<bool
 }
 
 export async function validateAdminCredentials (username: string, password: string): Promise<string | null> {
-  const [user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username)).limit(1)
+  const envAdminUsername = process.env.ADMIN_USERNAME?.trim()
+  const envAdminPasswordHash = process.env.ADMIN_PASSWORD_HASH?.trim()
+  const envAdminPassword = process.env.ADMIN_PASSWORD
+
+  if (envAdminUsername && safeEqual(username, envAdminUsername)) {
+    if (envAdminPasswordHash && verifyPasswordHash(password, envAdminPasswordHash)) {
+      return `${username}:${getToken(username, envAdminPasswordHash)}`
+    }
+    if (envAdminPassword && safeEqual(password, envAdminPassword)) {
+      return `${username}:${getToken(username, envAdminPassword)}`
+    }
+  }
+
+  let user: { username: string, passwordHash: string } | undefined
+  try {
+    ;[user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username)).limit(1)
+  } catch {
+    return null
+  }
   if (!user) return null
   if (!safeEqual(username, user.username)) return null
   if (!verifyPasswordHash(password, user.passwordHash)) return null

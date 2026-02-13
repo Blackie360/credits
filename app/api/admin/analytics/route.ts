@@ -8,7 +8,7 @@ import { desc } from 'drizzle-orm'
 export async function GET () {
   const cookieStore = await cookies()
   const token = cookieStore.get(getAdminCookieName())?.value
-  if (!verifyAdminToken(token)) {
+  if (!(await verifyAdminToken(token))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -30,8 +30,8 @@ export async function GET () {
         .from(allowedEmails)
     ])
 
-    const redeemed = codes.filter((r) => r.claimedByEmail != null)
-    const available = codes.filter((r) => r.claimedByEmail == null)
+    const redeemed = codes.filter((r) => r.claimedByEmail !== null)
+    const available = codes.filter((r) => r.claimedByEmail === null)
 
     return NextResponse.json({
       summary: {

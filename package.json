@@ -13,7 +13,8 @@
     "seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
     "create-admin": "tsx scripts/create-admin.ts",
-    "env:pull": "vercel env pull .env.local"
+    "env:pull": "vercel env pull .env.local",
+    "check-env": "tsx scripts/check-env.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

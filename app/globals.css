@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+button:hover,
+[role='button']:hover,
+input[type='button']:hover,
+input[type='submit']:hover,
+input[type='reset']:hover {
+  cursor: pointer;
+}

@@ -36,7 +36,7 @@ export const RedemptionEmail = ({
       <Head />
       <Tailwind>
         <Body className="bg-[#0d0d0d] font-sans">
-          <Preview>You've redeemed your Cursor Pro credit. Click here to claim it.</Preview>
+          <Preview>You&apos;ve redeemed your Cursor Pro credit. Click here to claim it.</Preview>
           <Container className="mx-auto my-0 px-6 py-12 max-w-[600px]">
             <Img
               src={`${baseUrl}/CUBE_2D_DARK.png`}
@@ -53,7 +53,7 @@ export const RedemptionEmail = ({
                 {greeting}
               </Text>
               <Text className="text-base leading-6 text-[#a3a3a3]">
-                You've successfully redeemed your Cursor Pro referral credit.
+                You&apos;ve successfully redeemed your Cursor Pro referral credit.
               </Text>
               <Text className="text-base leading-6 text-[#a3a3a3]">
                 Your referral code: <strong className="text-white font-mono">{code}</strong>

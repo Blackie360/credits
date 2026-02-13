@@ -6,7 +6,7 @@ type LoginAction = (formData: FormData) => Promise<{ error?: string } | void>
 
 export function AdminLoginForm ({ action }: { action: LoginAction }) {
   const [state, formAction] = useActionState(
-    async (_: unknown, formData: FormData) => {
+    async (_: void | { error?: string } | null, formData: FormData) => {
       return action(formData)
     },
     null as { error?: string } | null

@@ -69,7 +69,7 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const columnHelper = createColumnHelper<AnalyticsResponse['codes'][0]>()
-  const columns = useMemo<ColumnDef<AnalyticsResponse['codes'][0], unknown>[]>(
+  const columns = useMemo(
     () => [
       columnHelper.accessor('code', {
         header: 'Code',
@@ -106,7 +106,7 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
       })
     ],
     [columnHelper]
-  )
+  ) as ColumnDef<AnalyticsResponse['codes'][0], string | null>[]
 
   /* eslint-disable react-hooks/incompatible-library -- TanStack Table returns functions not suitable for React Compiler memoization */
   const table = useReactTable({
@@ -258,7 +258,7 @@ function EmailsDataTable ({ data }: { data: AnalyticsResponse['emails'] }) {
   const [globalFilter, setGlobalFilter] = useState('')
 
   const columnHelper = createColumnHelper<AnalyticsResponse['emails'][0]>()
-  const columns = useMemo<ColumnDef<AnalyticsResponse['emails'][0], unknown>[]>(
+  const columns = useMemo(
     () => [
       columnHelper.accessor('email', {
         header: 'Email',
@@ -272,7 +272,7 @@ function EmailsDataTable ({ data }: { data: AnalyticsResponse['emails'] }) {
       })
     ],
     [columnHelper]
-  )
+  ) as ColumnDef<AnalyticsResponse['emails'][0], string | null>[]
 
   /* eslint-disable react-hooks/incompatible-library -- TanStack Table returns functions not suitable for React Compiler memoization */
   const table = useReactTable({
@@ -447,6 +447,8 @@ export function AdminAnalytics () {
       </div>
     )
   }
+
+  if (!data) return null
 
   return (
     <div className="space-y-8">

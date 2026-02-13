@@ -14,7 +14,7 @@ export type RedeemResult =
   | { success: false; error: string }
 
 export async function redeemCode (
-  _prev: unknown,
+  _prev: RedeemResult | null,
   formData: FormData
 ): Promise<RedeemResult> {
   const rawEmail = (formData.get('email') as string) ?? ''

@@ -18,7 +18,7 @@ export function CsvUpload ({
   const formRef = useRef<HTMLFormElement>(null)
 
   const [state, formAction, isPending] = useActionState(
-    async (_: unknown, formData: FormData) => {
+    async (_: void | { error?: string } | null, formData: FormData) => {
       return action(formData)
     },
     null as { error?: string } | null

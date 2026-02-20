@@ -157,21 +157,17 @@ export async function uploadCodesCsv (formData: FormData) {
     const url = findColumn(row, 'url', 'link', 'referral_url', 'referral_link')
     const codeOnly = findColumn(row, 'code', 'code_id', 'referral_code')
 
-    let code: string
-    let resolvedUrl: string
+    let code = ''
 
     if (url) {
-      resolvedUrl = url
       const codeMatch = url.match(/[?&]code=([A-Za-z0-9._~-]+)/i)
-      code = (codeMatch?.[1] ?? url).trim()
+      code = (codeMatch?.[1] ?? '').trim()
     } else if (codeOnly) {
       code = codeOnly
-      resolvedUrl = `https://cursor.com/referral?code=${encodeURIComponent(code)}`
-    } else {
-      continue
     }
 
     if (!code) continue
+    const resolvedUrl = `https://cursor.com/referral?code=${encodeURIComponent(code)}`
     if (seen.has(code)) continue
     seen.add(code)
     entries.push({ code, url: resolvedUrl })

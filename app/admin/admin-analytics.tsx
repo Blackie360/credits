@@ -25,6 +25,7 @@ type AnalyticsResponse = {
   codes: Array<{
     id: number
     code: string
+    url: string
     status: 'redeemed' | 'available'
     claimedByEmail: string | null
   }>
@@ -72,9 +73,16 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
   const columns = useMemo(
     () => [
       columnHelper.accessor('code', {
-        header: 'Code',
+        header: 'Code URL',
         cell: (info) => (
-          <span className="font-mono text-zinc-200">{info.getValue()}</span>
+          <a
+            href={`https://cursor.com/referral?code=${encodeURIComponent(info.getValue())}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-zinc-200 underline hover:text-white"
+          >
+            {`https://cursor.com/referral?code=${info.getValue()}`}
+          </a>
         )
       }),
       columnHelper.accessor('status', {
@@ -153,7 +161,7 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[420px] text-left text-sm">
+        <table className="w-full min-w-[760px] text-left text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="border-b border-zinc-600/60">

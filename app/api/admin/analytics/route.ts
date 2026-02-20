@@ -15,6 +15,7 @@ type AnalyticsPayload = {
   codes: Array<{
     id: number
     code: string
+    url: string
     status: 'redeemed' | 'available'
     claimedByEmail: string | null
   }>
@@ -46,6 +47,7 @@ export async function GET () {
         .select({
           id: referralCodes.id,
           code: referralCodes.code,
+          url: referralCodes.url,
           claimedByEmail: referralCodes.claimedByEmail
         })
         .from(referralCodes)
@@ -71,6 +73,7 @@ export async function GET () {
       codes: codes.map((r) => ({
         id: r.id,
         code: r.code,
+        url: `https://cursor.com/referral?code=${encodeURIComponent(r.code)}`,
         status: r.claimedByEmail ? 'redeemed' as const : 'available' as const,
         claimedByEmail: r.claimedByEmail ?? null
       })),

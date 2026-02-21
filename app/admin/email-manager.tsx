@@ -18,13 +18,19 @@ export function EmailManager ({
   const deleteFormRef = useRef<HTMLFormElement>(null)
 
   const [upsertState, upsertFormAction, isUpserting] = useActionState(
-    async (_: EmailActionResult | null, formData: FormData) => upsertAction(formData),
-    null as EmailActionResult | null
+    async (_: { error?: string; success?: string } | null, formData: FormData) => {
+      const result = await upsertAction(formData)
+      return result ?? {}
+    },
+    null as { error?: string; success?: string } | null
   )
 
   const [deleteState, deleteFormAction, isDeleting] = useActionState(
-    async (_: EmailActionResult | null, formData: FormData) => deleteAction(formData),
-    null as EmailActionResult | null
+    async (_: { error?: string; success?: string } | null, formData: FormData) => {
+      const result = await deleteAction(formData)
+      return result ?? {}
+    },
+    null as { error?: string; success?: string } | null
   )
 
   useEffect(() => {

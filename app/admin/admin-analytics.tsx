@@ -41,6 +41,25 @@ async function fetchAnalytics (): Promise<AnalyticsResponse> {
   return res.json()
 }
 
+function downloadAvailableCreditsCsv (rows: AnalyticsResponse['codes']) {
+  const available = rows.filter((row) => row.status === 'available')
+  const header = 'code,url'
+  const lines = available.map((row) => {
+    const url = `https://cursor.com/referral?code=${encodeURIComponent(row.code)}`
+    return `${row.code},${url}`
+  })
+  const csv = [header, ...lines].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const objectUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = `available-credits-${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(objectUrl)
+}
+
 function SummaryCards ({ data }: { data: AnalyticsResponse['summary'] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-4">
@@ -133,11 +152,22 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
   /* eslint-enable react-hooks/incompatible-library */
 
   const statusFilter = columnFilters.find((f) => f.id === 'status')?.value as string | undefined
+  const availableCount = data.filter((row) => row.status === 'available').length
 
   return (
     <div className="overflow-hidden rounded-lg border border-zinc-600/60 bg-zinc-800/50">
       <div className="flex flex-col gap-3 border-b border-zinc-600/60 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <h2 className="text-sm font-semibold text-zinc-200">Referral Codes</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold text-zinc-200">Referral Codes</h2>
+          <button
+            type="button"
+            onClick={() => downloadAvailableCreditsCsv(data)}
+            disabled={availableCount === 0}
+            className="rounded border border-zinc-600 bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+          >
+            Export available ({availableCount})
+          </button>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <input
             type="text"

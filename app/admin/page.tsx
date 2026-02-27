@@ -85,13 +85,13 @@ export default async function AdminPage () {
             <div className="grid gap-4 sm:grid-cols-2">
               <CsvUpload
                 action={uploadEmailsCsv}
-                label="Upload Emails CSV"
-                hint="Uses only &quot;email&quot; and &quot;name&quot; columns (case-insensitive). Other columns ignored."
+                label="Bulk Upload Emails"
+                hint="Columns: email, name (or one email per line)."
               />
               <CsvUpload
                 action={uploadCodesCsv}
-                label="Upload Codes CSV"
-                hint="Uses &quot;code&quot; or &quot;url&quot; column (e.g. https://cursor.com/referral?code=XXX). Other columns ignored."
+                label="Bulk Upload Codes"
+                hint="Columns: code or url."
               />
             </div>
             <AdminAnalytics />

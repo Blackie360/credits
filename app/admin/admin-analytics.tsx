@@ -13,7 +13,29 @@ import {
   type SortingState,
   type ColumnFiltersState
 } from '@tanstack/react-table'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+
+function CopyButton ({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }, [text])
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="shrink-0 rounded border border-zinc-600 bg-zinc-800 px-1.5 py-0.5 text-xs text-zinc-400 hover:bg-zinc-700 hover:text-white"
+      title="Copy URL"
+    >
+      {copied ? 'Copied!' : 'Copy'}
+    </button>
+  )
+}
 
 type AnalyticsResponse = {
   summary: {
@@ -32,8 +54,8 @@ type AnalyticsResponse = {
   emails: Array<{ email: string; name: string | null }>
 }
 
-async function fetchAnalytics (): Promise<AnalyticsResponse> {
-  const res = await fetch('/api/admin/analytics')
+async function fetchAnalytics (eventSlug: string): Promise<AnalyticsResponse> {
+  const res = await fetch(`/api/admin/analytics?slug=${encodeURIComponent(eventSlug)}`)
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err?.error ?? `HTTP ${res.status}`)
@@ -93,16 +115,22 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
     () => [
       columnHelper.accessor('code', {
         header: 'Code URL',
-        cell: (info) => (
-          <a
-            href={`https://cursor.com/referral?code=${encodeURIComponent(info.getValue())}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-zinc-200 underline hover:text-white"
-          >
-            {`https://cursor.com/referral?code=${info.getValue()}`}
-          </a>
-        )
+        cell: (info) => {
+          const url = `https://cursor.com/referral?code=${encodeURIComponent(info.getValue())}`
+          return (
+            <span className="flex items-center gap-2">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-zinc-200 underline hover:text-white"
+              >
+                {url}
+              </a>
+              <CopyButton text={url} />
+            </span>
+          )
+        }
       }),
       columnHelper.accessor('status', {
         header: 'Status',
@@ -153,12 +181,29 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
 
   const statusFilter = columnFilters.find((f) => f.id === 'status')?.value as string | undefined
   const availableCount = data.filter((row) => row.status === 'available').length
+  const [allCopied, setAllCopied] = useState(false)
+
+  const copyAllUrls = useCallback(() => {
+    const urls = data.map((row) => `https://cursor.com/referral?code=${encodeURIComponent(row.code)}`)
+    navigator.clipboard.writeText(urls.join('\n')).then(() => {
+      setAllCopied(true)
+      setTimeout(() => setAllCopied(false), 1500)
+    })
+  }, [data])
 
   return (
     <div className="overflow-hidden rounded-lg border border-zinc-600/60 bg-zinc-800/50">
       <div className="flex flex-col gap-3 border-b border-zinc-600/60 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-semibold text-zinc-200">Referral Codes</h2>
+          <button
+            type="button"
+            onClick={copyAllUrls}
+            disabled={data.length === 0}
+            className="rounded border border-zinc-600 bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+          >
+            {allCopied ? 'Copied!' : `Copy all URLs (${data.length})`}
+          </button>
           <button
             type="button"
             onClick={() => downloadAvailableCreditsCsv(data)}
@@ -442,10 +487,10 @@ function EmailsDataTable ({ data }: { data: AnalyticsResponse['emails'] }) {
   )
 }
 
-export function AdminAnalytics () {
+export function AdminAnalytics ({ eventSlug }: { eventSlug: string }) {
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['admin', 'analytics'],
-    queryFn: fetchAnalytics
+    queryKey: ['admin', 'analytics', eventSlug],
+    queryFn: () => fetchAnalytics(eventSlug)
   })
 
   if (isLoading) {

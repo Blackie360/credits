@@ -8,10 +8,12 @@ type EmailAction = (formData: FormData) => Promise<EmailActionResult>
 
 export function EmailManager ({
   upsertAction,
-  deleteAction
+  deleteAction,
+  eventSlug
 }: {
   upsertAction: EmailAction
   deleteAction: EmailAction
+  eventSlug: string
 }) {
   const queryClient = useQueryClient()
   const upsertFormRef = useRef<HTMLFormElement>(null)
@@ -53,6 +55,7 @@ export function EmailManager ({
         action={upsertFormAction}
         className="mb-4"
       >
+        <input type="hidden" name="eventSlug" value={eventSlug} />
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
           <input
             type="email"
@@ -90,6 +93,7 @@ export function EmailManager ({
         action={deleteFormAction}
         className="border-t border-zinc-700/60 pt-4"
       >
+        <input type="hidden" name="eventSlug" value={eventSlug} />
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
           <input
             type="email"

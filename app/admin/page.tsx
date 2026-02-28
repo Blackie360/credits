@@ -1,20 +1,16 @@
 import { cookies } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
+import { and, eq, isNull } from 'drizzle-orm'
 import { getAdminCookieName, verifyAdminToken } from '@/lib/admin'
-import {
-  adminLogin,
-  adminLogout,
-  uploadEmailsCsv,
-  uploadCodesCsv,
-  upsertAllowedEmail,
-  deleteAllowedEmail
-} from './actions'
-import { AdminAnalytics } from './admin-analytics'
+import { db } from '@/lib/db'
+import { events, referralCodes } from '@/lib/db/schema'
+import { adminLogin, adminLogout, createEvent, deleteEvent } from './actions'
 import { AdminLoginForm } from './admin-login-form'
-import { EmailManager } from './email-manager'
-import { AdminQueryProvider } from './query-provider'
-import { CsvUpload } from './csv-upload'
+import { CreateEventForm } from './create-event-form'
+import { DeleteEventButton } from './delete-event-button'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminPage () {
   const cookieStore = await cookies()
@@ -38,7 +34,7 @@ export default async function AdminPage () {
           <AdminLoginForm action={adminLogin} />
           <p className="mt-6 text-center text-xs text-zinc-500">
             <Link href="/" className="underline hover:text-zinc-400">
-              Back to redeem
+              Back to portal
             </Link>
           </p>
         </main>
@@ -46,9 +42,24 @@ export default async function AdminPage () {
     )
   }
 
+  const allEvents = await db.select().from(events)
+  const eventsWithStats = await Promise.all(
+    allEvents.map(async (event) => {
+      const total = await db.select().from(referralCodes).where(eq(referralCodes.eventSlug, event.slug))
+      const available = await db.select().from(referralCodes).where(
+        and(eq(referralCodes.eventSlug, event.slug), isNull(referralCodes.claimedByEmail))
+      )
+      return {
+        ...event,
+        totalCodes: total.length,
+        availableCodes: available.length
+      }
+    })
+  )
+
   return (
     <div className="min-h-screen bg-[#1a1a1a] px-4 py-12 font-sans text-white">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-3xl">
         <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Image
@@ -58,12 +69,12 @@ export default async function AdminPage () {
               height={40}
             />
             <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
-              Admin Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-zinc-400">
-              Manage codes, emails, and CSV uploads
-            </p>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+                Events Manager
+              </h1>
+              <p className="mt-1 text-sm text-zinc-400">
+                Create and manage credit disbursement events
+              </p>
             </div>
           </div>
           <form action={adminLogout}>
@@ -76,31 +87,49 @@ export default async function AdminPage () {
           </form>
         </header>
 
-        <AdminQueryProvider>
-          <div className="space-y-8">
-            <EmailManager
-              upsertAction={upsertAllowedEmail}
-              deleteAction={deleteAllowedEmail}
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <CsvUpload
-                action={uploadEmailsCsv}
-                label="Bulk Upload Emails"
-                hint="Columns: email, name (or one email per line)."
-              />
-              <CsvUpload
-                action={uploadCodesCsv}
-                label="Bulk Upload Codes"
-                hint="Columns: code or url."
-              />
+        <CreateEventForm action={createEvent} />
+
+        <div className="mt-8 space-y-4">
+          <h2 className="text-lg font-semibold text-zinc-200">Events</h2>
+          {eventsWithStats.length === 0 && (
+            <p className="text-sm text-zinc-500">No events yet. Create one above.</p>
+          )}
+          {eventsWithStats.map((event) => (
+            <div
+              key={event.slug}
+              className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-zinc-600/60 bg-zinc-800/50 px-5 py-4"
+            >
+              <div>
+                <p className="font-semibold text-zinc-100">{event.name}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">/{event.slug}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <span className="text-sm text-zinc-300">
+                    <span className="font-medium text-orange-500">{event.availableCodes}</span>
+                    <span className="text-zinc-500">/{event.totalCodes}</span>
+                  </span>
+                  <p className="text-xs text-zinc-500">available</p>
+                </div>
+                <Link
+                  href={`/${event.slug}/admin`}
+                  className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+                >
+                  Manage
+                </Link>
+                <DeleteEventButton
+                  slug={event.slug}
+                  name={event.name}
+                  action={deleteEvent}
+                />
+              </div>
             </div>
-            <AdminAnalytics />
-          </div>
-        </AdminQueryProvider>
+          ))}
+        </div>
 
         <p className="mt-8 text-center text-xs text-zinc-500">
           <Link href="/" className="underline hover:text-zinc-400">
-            Back to redeem
+            Back to portal
           </Link>
         </p>
       </div>

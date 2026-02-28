@@ -8,11 +8,13 @@ export function CsvUpload ({
   action,
   label,
   hint,
+  eventSlug,
   allowReplace = true
 }: {
   action: UploadAction
   label: string
   hint: string
+  eventSlug: string
   allowReplace?: boolean
 }) {
   const formRef = useRef<HTMLFormElement>(null)
@@ -30,6 +32,7 @@ export function CsvUpload ({
       action={formAction}
       className="rounded-lg border border-zinc-600/60 bg-zinc-800/50 p-4"
     >
+      <input type="hidden" name="eventSlug" value={eventSlug} />
       <p className="mb-1 text-sm font-semibold text-zinc-200">{label}</p>
       <p className="mb-3 text-xs text-zinc-500">{hint}</p>
 

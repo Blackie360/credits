@@ -4,7 +4,7 @@ import { useActionState } from 'react'
 
 type LoginAction = (formData: FormData) => Promise<{ error?: string } | void>
 
-export function AdminLoginForm ({ action }: { action: LoginAction }) {
+export function AdminLoginForm ({ action, redirectTo }: { action: LoginAction; redirectTo?: string }) {
   const [state, formAction] = useActionState(
     async (_: void | { error?: string } | null, formData: FormData) => {
       return action(formData)
@@ -14,6 +14,7 @@ export function AdminLoginForm ({ action }: { action: LoginAction }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
       <div>
         <label className="sr-only" htmlFor="admin-username">
           Username

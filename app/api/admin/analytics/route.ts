@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
+import { eq, desc } from 'drizzle-orm'
 import { getAdminCookieName, verifyAdminToken } from '@/lib/admin'
 import { db } from '@/lib/db'
 import { referralCodes, allowedEmails } from '@/lib/db/schema'
-import { desc } from 'drizzle-orm'
 
 type AnalyticsPayload = {
   summary: {
@@ -25,20 +25,16 @@ type AnalyticsPayload = {
   }>
 }
 
-const ANALYTICS_CACHE_TTL_MS = 15 * 1000
-
-let analyticsCache: { data: AnalyticsPayload; expiresAt: number } | null = null
-
-export async function GET () {
+export async function GET (request: NextRequest) {
   const cookieStore = await cookies()
   const token = cookieStore.get(getAdminCookieName())?.value
   if (!(await verifyAdminToken(token))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const now = Date.now()
-  if (analyticsCache && analyticsCache.expiresAt > now) {
-    return NextResponse.json(analyticsCache.data)
+  const slug = request.nextUrl.searchParams.get('slug')
+  if (!slug) {
+    return NextResponse.json({ error: 'Missing slug parameter' }, { status: 400 })
   }
 
   try {
@@ -51,6 +47,7 @@ export async function GET () {
           claimedByEmail: referralCodes.claimedByEmail
         })
         .from(referralCodes)
+        .where(eq(referralCodes.eventSlug, slug))
         .orderBy(desc(referralCodes.id)),
       db
         .select({
@@ -58,6 +55,7 @@ export async function GET () {
           name: allowedEmails.name
         })
         .from(allowedEmails)
+        .where(eq(allowedEmails.eventSlug, slug))
     ])
 
     const redeemed = codes.filter((r) => r.claimedByEmail !== null)
@@ -78,11 +76,6 @@ export async function GET () {
         claimedByEmail: r.claimedByEmail ?? null
       })),
       emails
-    }
-
-    analyticsCache = {
-      data: payload,
-      expiresAt: now + ANALYTICS_CACHE_TTL_MS
     }
 
     return NextResponse.json(payload)

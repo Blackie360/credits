@@ -49,37 +49,61 @@ export async function redeemCode (
     return { success: false, error: 'You have already redeemed a code.' }
   }
 
-  const [unclaimed] = await db
-    .select()
-    .from(referralCodes)
-    .where(and(isNull(referralCodes.claimedByEmail), eq(referralCodes.eventSlug, eventSlug)))
-    .limit(1)
+  const MAX_RETRIES = 3
+  let claimed: typeof referralCodes.$inferSelect | undefined
 
-  if (!unclaimed) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const [unclaimed] = await db
+      .select()
+      .from(referralCodes)
+      .where(and(isNull(referralCodes.claimedByEmail), eq(referralCodes.eventSlug, eventSlug)))
+      .limit(1)
+
+    if (!unclaimed) {
+      return { success: false, error: 'No codes available at the moment.' }
+    }
+
+    try {
+      const [result] = await db
+        .update(referralCodes)
+        .set({ claimedByEmail: email })
+        .where(and(eq(referralCodes.id, unclaimed.id), isNull(referralCodes.claimedByEmail)))
+        .returning()
+
+      if (result) {
+        claimed = result
+        break
+      }
+    } catch (err: unknown) {
+      const isUniqueViolation =
+        err instanceof Error && err.message.includes('unique_claim_per_event')
+      if (isUniqueViolation) {
+        return { success: false, error: 'You have already redeemed a code.' }
+      }
+      throw err
+    }
+  }
+
+  if (!claimed) {
     return { success: false, error: 'No codes available at the moment.' }
   }
 
-  await db
-    .update(referralCodes)
-    .set({ claimedByEmail: email })
-    .where(eq(referralCodes.id, unclaimed.id))
-
   try {
-    await sendRedemptionEmail(email, allowed.name, unclaimed.code, unclaimed.url)
+    await sendRedemptionEmail(email, allowed.name, claimed.code, claimed.url)
   } catch (err) {
     console.error('Failed to send redemption email', {
       email,
       name: allowed.name,
-      code: unclaimed.code,
-      url: unclaimed.url,
+      code: claimed.code,
+      url: claimed.url,
       error: err
     })
   }
 
   return {
     success: true,
-    code: unclaimed.code,
-    url: unclaimed.url
+    code: claimed.code,
+    url: claimed.url
   }
 }
 

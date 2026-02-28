@@ -1,4 +1,5 @@
-import { pgTable, text, serial, timestamp, primaryKey, unique } from 'drizzle-orm/pg-core'
+import { pgTable, text, serial, timestamp, primaryKey, unique, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const events = pgTable('events', {
   slug: text('slug').primaryKey().notNull(),
@@ -21,7 +22,10 @@ export const referralCodes = pgTable('referral_codes', {
   claimedByEmail: text('claimed_by_email'),
   eventSlug: text('event_slug').notNull()
 }, (t) => [
-  unique().on(t.code, t.eventSlug)
+  unique().on(t.code, t.eventSlug),
+  uniqueIndex('unique_claim_per_event')
+    .on(t.claimedByEmail, t.eventSlug)
+    .where(sql`${t.claimedByEmail} IS NOT NULL`)
 ])
 
 export const adminUsers = pgTable('admin_users', {

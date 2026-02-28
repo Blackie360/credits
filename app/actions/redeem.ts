@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { allowedEmails, referralCodes } from '@/lib/db/schema'
 import { sendRedemptionEmail } from '@/lib/email'
@@ -18,16 +18,21 @@ export async function redeemCode (
   formData: FormData
 ): Promise<RedeemResult> {
   const rawEmail = (formData.get('email') as string) ?? ''
+  const eventSlug = (formData.get('eventSlug') as string) ?? ''
   const email = normalizeEmail(rawEmail)
 
   if (!email || !email.includes('@')) {
     return { success: false, error: 'Please enter a valid email address.' }
   }
 
+  if (!eventSlug) {
+    return { success: false, error: 'Invalid event.' }
+  }
+
   const [allowed] = await db
     .select()
     .from(allowedEmails)
-    .where(eq(allowedEmails.email, email))
+    .where(and(eq(allowedEmails.email, email), eq(allowedEmails.eventSlug, eventSlug)))
     .limit(1)
 
   if (!allowed) {
@@ -37,7 +42,7 @@ export async function redeemCode (
   const [alreadyClaimed] = await db
     .select()
     .from(referralCodes)
-    .where(eq(referralCodes.claimedByEmail, email))
+    .where(and(eq(referralCodes.claimedByEmail, email), eq(referralCodes.eventSlug, eventSlug)))
     .limit(1)
 
   if (alreadyClaimed) {
@@ -47,7 +52,7 @@ export async function redeemCode (
   const [unclaimed] = await db
     .select()
     .from(referralCodes)
-    .where(isNull(referralCodes.claimedByEmail))
+    .where(and(isNull(referralCodes.claimedByEmail), eq(referralCodes.eventSlug, eventSlug)))
     .limit(1)
 
   if (!unclaimed) {
@@ -80,8 +85,10 @@ export async function redeemCode (
 
 export type CodeCounts = { available: number; total: number }
 
-export async function getCodeCounts (): Promise<CodeCounts> {
-  const all = await db.select().from(referralCodes)
-  const unclaimed = await db.select().from(referralCodes).where(isNull(referralCodes.claimedByEmail))
+export async function getCodeCounts (eventSlug: string): Promise<CodeCounts> {
+  const all = await db.select().from(referralCodes).where(eq(referralCodes.eventSlug, eventSlug))
+  const unclaimed = await db.select().from(referralCodes).where(
+    and(isNull(referralCodes.claimedByEmail), eq(referralCodes.eventSlug, eventSlug))
+  )
   return { total: all.length, available: unclaimed.length }
 }

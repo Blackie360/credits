@@ -25,13 +25,18 @@ function getTransport () {
     host,
     port: Number(process.env.SMTP_PORT) || 587,
     secure,
-    auth: {
-      user,
-      pass
-    }
+    auth: { user, pass },
+    pool: false,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000
   })
 
   return transport
+}
+
+export async function verifySmtpConnection (): Promise<boolean> {
+  return getTransport().verify()
 }
 
 export async function sendRedemptionEmail (
@@ -40,19 +45,23 @@ export async function sendRedemptionEmail (
   code: string,
   url: string
 ): Promise<void> {
-  const html = await render(
-    createElement(RedemptionEmail, {
-      name: name ?? undefined,
-      code,
-      redemptionUrl: url
-    })
-  )
+  const emailElement = createElement(RedemptionEmail, {
+    name: name ?? undefined,
+    code,
+    redemptionUrl: url
+  })
+
+  const [html, text] = await Promise.all([
+    render(emailElement),
+    render(emailElement, { plainText: true })
+  ])
 
   const from = getRequiredEnv('EMAIL_FROM')
   await getTransport().sendMail({
     from,
     to,
     subject: 'Claim Your Cursor Pro Credit',
-    html
+    html,
+    text
   })
 }

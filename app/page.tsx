@@ -61,12 +61,7 @@ export default async function Home () {
           ))}
         </div>
 
-        <Link
-          href="/admin"
-          className="text-xs text-zinc-500 underline hover:text-zinc-400"
-        >
-          Admin
-        </Link>
+
       </main>
     </div>
   )

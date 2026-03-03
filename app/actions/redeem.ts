@@ -11,7 +11,7 @@ function normalizeEmail (email: string): string {
 
 export type RedeemResult =
   | { success: true; code: string; url: string }
-  | { success: false; error: string }
+  | { success: false; error: string; url?: string }
 
 export async function redeemCode (
   _prev: RedeemResult | null,
@@ -46,7 +46,7 @@ export async function redeemCode (
     .limit(1)
 
   if (alreadyClaimed) {
-    return { success: false, error: 'You have already redeemed a code.' }
+    return { success: false, error: 'You have already redeemed a code.', url: alreadyClaimed.url }
   }
 
   const MAX_RETRIES = 3
@@ -66,7 +66,7 @@ export async function redeemCode (
     try {
       const [result] = await db
         .update(referralCodes)
-        .set({ claimedByEmail: email })
+        .set({ claimedByEmail: email, claimedAt: new Date() })
         .where(and(eq(referralCodes.id, unclaimed.id), isNull(referralCodes.claimedByEmail)))
         .returning()
 

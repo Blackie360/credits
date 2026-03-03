@@ -59,7 +59,19 @@ export function RedeemForm ({ eventSlug, eventName }: { eventSlug: string; event
               className="w-full rounded-lg border border-red-600/60 bg-red-900/20 px-4 py-3 text-sm text-red-300"
               role="alert"
             >
-              {result.error}
+              <p>{result.error}</p>
+              {result.url && (
+                <p className="mt-1 break-all">
+                  <a
+                    href={result.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-red-200"
+                  >
+                    {result.url}
+                  </a>
+                </p>
+              )}
             </div>
           )}
 

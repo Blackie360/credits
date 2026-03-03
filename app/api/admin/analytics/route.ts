@@ -18,6 +18,7 @@ type AnalyticsPayload = {
     url: string
     status: 'redeemed' | 'available'
     claimedByEmail: string | null
+    claimedAt: string | null
   }>
   emails: Array<{
     email: string
@@ -44,7 +45,8 @@ export async function GET (request: NextRequest) {
           id: referralCodes.id,
           code: referralCodes.code,
           url: referralCodes.url,
-          claimedByEmail: referralCodes.claimedByEmail
+          claimedByEmail: referralCodes.claimedByEmail,
+          claimedAt: referralCodes.claimedAt
         })
         .from(referralCodes)
         .where(eq(referralCodes.eventSlug, slug))
@@ -73,7 +75,8 @@ export async function GET (request: NextRequest) {
         code: r.code,
         url: `https://cursor.com/referral?code=${encodeURIComponent(r.code)}`,
         status: r.claimedByEmail ? 'redeemed' as const : 'available' as const,
-        claimedByEmail: r.claimedByEmail ?? null
+        claimedByEmail: r.claimedByEmail ?? null,
+        claimedAt: r.claimedAt?.toISOString() ?? null
       })),
       emails
     }

@@ -50,6 +50,7 @@ type AnalyticsResponse = {
     url: string
     status: 'redeemed' | 'available'
     claimedByEmail: string | null
+    claimedAt: string | null
   }>
   emails: Array<{ email: string; name: string | null }>
 }
@@ -158,10 +159,39 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
         cell: (info) => (
           <span className="text-zinc-400">{info.getValue() ?? '—'}</span>
         )
+      }),
+      columnHelper.accessor('claimedAt', {
+        header: 'Redeemed at',
+        cell: (info) => {
+          const value = info.getValue()
+          if (!value) return <span className="text-zinc-600">—</span>
+          const date = new Date(value)
+          return (
+            <span className="whitespace-nowrap text-zinc-400">
+              {date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              {' '}
+              {date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )
+        }
       })
     ],
     [columnHelper]
   ) as ColumnDef<AnalyticsResponse['codes'][0], string | null>[]
+
+  const globalFilterFn = useCallback(
+    (row: { original: AnalyticsResponse['codes'][0] }, _columnId: string, filterValue: string) => {
+      const search = filterValue.toLowerCase()
+      const { code, claimedByEmail } = row.original
+      const url = `https://cursor.com/referral?code=${encodeURIComponent(code)}`
+      return (
+        code.toLowerCase().includes(search) ||
+        url.toLowerCase().includes(search) ||
+        (claimedByEmail?.toLowerCase().includes(search) ?? false)
+      )
+    },
+    []
+  )
 
   /* eslint-disable react-hooks/incompatible-library -- TanStack Table returns functions not suitable for React Compiler memoization */
   const table = useReactTable({
@@ -171,6 +201,7 @@ function CodesDataTable ({ data }: { data: AnalyticsResponse['codes'] }) {
     onSortingChange: (updater) => setSorting((prev) => (typeof updater === 'function' ? updater(prev) : updater)),
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
+    globalFilterFn,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

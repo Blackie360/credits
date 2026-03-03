@@ -20,6 +20,7 @@ export const referralCodes = pgTable('referral_codes', {
   code: text('code').notNull(),
   url: text('url').notNull(),
   claimedByEmail: text('claimed_by_email'),
+  claimedAt: timestamp('claimed_at'),
   eventSlug: text('event_slug').notNull()
 }, (t) => [
   unique().on(t.code, t.eventSlug),

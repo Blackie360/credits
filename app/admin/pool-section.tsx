@@ -80,16 +80,18 @@ export function PoolSection ({ poolCodes, events }: PoolSectionProps) {
     router.refresh()
   }, [router])
 
+  type ActionResult = { error?: string; success?: string } | null
+
   const [reclaimState, reclaimAction, isReclaimPending] = useActionState(
-    async (_: unknown) => {
+    async (_: unknown): Promise<ActionResult> => {
       const result = await syncUnclaimedToPool()
       if (result && 'synced' in result) {
         onReclaimSuccess()
         return { success: `Reclaimed ${result.synced} unclaimed code${result.synced === 1 ? '' : 's'} to pool.` }
       }
-      return result ?? {}
+      return {}
     },
-    null as { error?: string; success?: string } | null
+    null as ActionResult
   )
 
   const [pasteState, pasteAction, isPastePending] = useActionState(

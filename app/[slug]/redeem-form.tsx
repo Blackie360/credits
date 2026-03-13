@@ -26,7 +26,7 @@ export function RedeemForm ({ eventSlug, eventName }: { eventSlug: string; event
             {eventName}
           </h1>
           <p className="text-center text-sm font-normal text-zinc-400">
-            Redeem your Cursor Pro access code
+            Redeem your Cursor Kenya code
           </p>
         </div>
 
@@ -101,7 +101,7 @@ export function RedeemForm ({ eventSlug, eventName }: { eventSlug: string; event
 
         <div className="flex flex-col items-center gap-2">
           <p className="text-center text-xs text-zinc-500">
-            cursor pro codes by cursor kenya community
+            Cursor Pro codes by Cursor Kenya community
           </p>
           <Link href="/" className="text-xs text-zinc-500 underline hover:text-zinc-400">
             All events

@@ -59,7 +59,7 @@ export async function sendRedemptionEmail (
   await getTransport().sendMail({
     from,
     to,
-    subject: 'Claim Your Cursor Pro Credit',
+    subject: 'Redeem Your Cursor Kenya Credit',
     html,
     text
   })

@@ -38,10 +38,10 @@ export default async function Home () {
             className="text-center text-2xl font-bold tracking-tight"
             style={{ fontFamily: 'var(--font-geist-pixel-square)' }}
           >
-            Cursor Pro Credits Portal
+            Cursor Kenya — Code Redeemable
           </h1>
           <p className="text-center text-sm font-normal text-zinc-400">
-            Select an event to redeem your Cursor Pro access code
+            Select an event to redeem your Cursor Kenya code
           </p>
         </div>
 

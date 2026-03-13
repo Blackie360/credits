@@ -5,10 +5,12 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { getAdminCookieName, verifyAdminToken } from '@/lib/admin'
 import { db } from '@/lib/db'
 import { events, referralCodes } from '@/lib/db/schema'
+import { POOL_SLUG } from '@/lib/pool'
 import { adminLogin, adminLogout, createEvent, deleteEvent } from './actions'
 import { AdminLoginForm } from './admin-login-form'
 import { CreateEventForm } from './create-event-form'
 import { DeleteEventButton } from './delete-event-button'
+import { PoolSection } from './pool-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,8 +45,13 @@ export default async function AdminPage () {
   }
 
   const allEvents = await db.select().from(events)
+  const filteredEvents = allEvents.filter((e) => e.slug !== POOL_SLUG)
+  const poolCodes = await db
+    .select({ id: referralCodes.id, code: referralCodes.code, url: referralCodes.url })
+    .from(referralCodes)
+    .where(eq(referralCodes.eventSlug, POOL_SLUG))
   const eventsWithStats = await Promise.all(
-    allEvents.map(async (event) => {
+    filteredEvents.map(async (event) => {
       const total = await db.select().from(referralCodes).where(eq(referralCodes.eventSlug, event.slug))
       const available = await db.select().from(referralCodes).where(
         and(eq(referralCodes.eventSlug, event.slug), isNull(referralCodes.claimedByEmail))
@@ -86,6 +93,10 @@ export default async function AdminPage () {
             </button>
           </form>
         </header>
+
+        <div className="mb-8">
+          <PoolSection poolCodes={poolCodes} events={eventsWithStats} />
+        </div>
 
         <CreateEventForm action={createEvent} />
 

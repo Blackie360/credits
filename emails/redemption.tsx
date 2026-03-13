@@ -35,7 +35,7 @@ export const RedemptionEmail = ({
       <Head />
       <Tailwind>
         <Body className="bg-[#0d0d0d] font-sans">
-          <Preview>Your Cursor Pro referral code is ready. Click to claim your credit.</Preview>
+          <Preview>Your Cursor Kenya code is ready. Click to redeem your credit.</Preview>
           <Container className="mx-auto my-0 px-6 py-12 max-w-[600px]">
             <Img
               src={`${baseUrl}/CUBE_2D_DARK.png`}
@@ -45,14 +45,14 @@ export const RedemptionEmail = ({
               className="mb-6"
             />
             <Heading className="text-2xl font-bold text-white mt-0 mb-6">
-              Your Cursor Pro Code Is Ready
+              Your Cursor Kenya Code Is Ready
             </Heading>
             <Section className="my-6 mx-0">
               <Text className="text-base leading-6 text-[#a3a3a3]">
                 {greeting}
               </Text>
               <Text className="text-base leading-6 text-[#a3a3a3]">
-                You&apos;ve successfully received your Cursor Pro referral code.
+                You&apos;ve successfully received your Cursor Kenya referral code.
               </Text>
               <Text className="text-base leading-6 text-[#a3a3a3]">
                 Your referral code: <strong className="text-white font-mono">{code}</strong>
@@ -62,7 +62,7 @@ export const RedemptionEmail = ({
                   href={redemptionUrl}
                   className="bg-[#0052CC] text-white px-6 py-3 rounded-lg font-semibold"
                 >
-                  Claim your Cursor Pro credit
+                  Redeem your Cursor Kenya credit
                 </Button>
               </Section>
               <Text className="text-base leading-6 text-[#a3a3a3]">
